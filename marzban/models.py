@@ -1,5 +1,6 @@
 from pydantic import BaseModel, field_validator, ValidationInfo, AfterValidator, ValidationError
 from typing import Optional, List, Dict, Any, ClassVar, Annotated, Literal
+from datetime import datetime
 
 
 class Token(BaseModel):
@@ -269,3 +270,42 @@ class SystemStats(BaseModel):
     outgoing_bandwidth: Optional[int] = None
     incoming_bandwidth_speed: Optional[int] = None
     outgoing_bandwidth_speed: Optional[int] = None
+
+
+class TelegramUserBase(BaseModel):
+    """Базовая модель для Telegram-пользователей"""
+    telegram_id: int
+    username: Optional[str] = None
+    test_period: int = 7
+
+
+class TelegramUserCreate(TelegramUserBase):
+    """Модель для создания Telegram-пользователя"""
+    user_id: int
+
+
+class TelegramUserUpdate(BaseModel):
+    """Модель для обновления данных Telegram-пользователя"""
+    username: Optional[str] = None
+    test_period: Optional[int] = None
+
+
+class TelegramUserResponse(TelegramUserBase):
+    """Модель ответа с данными Telegram-пользователя"""
+    id: int
+    user_id: int
+    created_at: datetime
+
+
+class TelegramUserWithUserResponse(TelegramUserResponse):
+    """Модель ответа с данными Telegram-пользователя и связанного пользователя Marzban"""
+    user_username: str
+
+
+class UserByTelegramResponse(BaseModel):
+    """Модель для возврата пользователей, связанных с определенным Telegram ID"""
+    username: str
+    status: str
+    data_limit: Optional[int] = None
+    expire: Optional[int] = None
+    used_traffic: Optional[int] = 0

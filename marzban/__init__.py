@@ -1,5 +1,5 @@
 from .api import MarzbanAPI
-from .utils import MarzbanTokenCache
+from .utils import MarzbanTokenCache, parse_url
 from .models import (
     Admin, 
     AdminCreate, 
@@ -29,7 +29,13 @@ from .models import (
     ValidationError,
     SubscriptionUserResponse,
     SystemStats,
-    NextPlanModel
+    NextPlanModel,
+    TelegramUserBase,
+    TelegramUserCreate,
+    TelegramUserUpdate,
+    TelegramUserResponse,
+    TelegramUserWithUserResponse,
+    UserByTelegramResponse
 )
 
 __all__ = (
@@ -64,7 +70,14 @@ __all__ = (
     "ValidationError",
     "SubscriptionUserResponse",
     "SystemStats",
-    "NextPlanModel"
+    "NextPlanModel",
+    "parse_url",
+    "TelegramUserBase",
+    "TelegramUserCreate",
+    "TelegramUserUpdate",
+    "TelegramUserResponse",
+    "TelegramUserWithUserResponse",
+    "UserByTelegramResponse"
 )
 
 __version__ = "0.4.2"

@@ -416,3 +416,171 @@ class MarzbanAPI:
             await self.client.aclose()
         if self._tunnel:
             self._tunnel.stop()
+
+    # =========== Методы для работы с Telegram-пользователями ===========
+
+    async def get_telegram_user(self, telegram_id: int) -> TelegramUserResponse:
+        """
+        Получение информации о пользователе Telegram по его Telegram ID.
+
+        Args:
+            telegram_id: ID пользователя в Telegram
+
+        Returns:
+            TelegramUserResponse: Объект с данными пользователя Telegram
+        
+        Raises:
+            httpx.HTTPStatusError: При ошибке запроса к API
+        """
+        url = f"{self.base_url}/api/telegram_user/{telegram_id}"
+        async with httpx.AsyncClient(verify=self.verify, timeout=self.timeout) as client:
+            response = await client.get(
+                url,
+                headers=self._get_auth_header()
+            )
+            response.raise_for_status()
+            return TelegramUserResponse(**response.json())
+    
+    async def get_telegram_users(self, skip: int = 0, limit: int = 100) -> List[TelegramUserResponse]:
+        """
+        Получение списка всех пользователей Telegram с возможностью пагинации.
+
+        Args:
+            skip: Количество записей для пропуска (смещение)
+            limit: Максимальное количество возвращаемых записей
+
+        Returns:
+            List[TelegramUserResponse]: Список объектов с данными пользователей Telegram
+        
+        Raises:
+            httpx.HTTPStatusError: При ошибке запроса к API
+        """
+        url = f"{self.base_url}/api/telegram_users?skip={skip}&limit={limit}"
+        async with httpx.AsyncClient(verify=self.verify, timeout=self.timeout) as client:
+            response = await client.get(
+                url,
+                headers=self._get_auth_header()
+            )
+            response.raise_for_status()
+            return [TelegramUserResponse(**user) for user in response.json()]
+    
+    async def get_users_by_telegram_id(self, telegram_id: int) -> List[UserByTelegramResponse]:
+        """
+        Получение списка пользователей Marzban, связанных с указанным Telegram ID.
+
+        Args:
+            telegram_id: ID пользователя в Telegram
+
+        Returns:
+            List[UserByTelegramResponse]: Список объектов с данными пользователей Marzban
+        
+        Raises:
+            httpx.HTTPStatusError: При ошибке запроса к API
+        """
+        url = f"{self.base_url}/api/telegram_user/{telegram_id}/users"
+        async with httpx.AsyncClient(verify=self.verify, timeout=self.timeout) as client:
+            response = await client.get(
+                url,
+                headers=self._get_auth_header()
+            )
+            response.raise_for_status()
+            return [UserByTelegramResponse(**user) for user in response.json()]
+    
+    async def create_telegram_user(self, telegram_user: TelegramUserCreate) -> TelegramUserResponse:
+        """
+        Создание нового пользователя Telegram.
+
+        Args:
+            telegram_user: Объект с данными для создания пользователя Telegram
+
+        Returns:
+            TelegramUserResponse: Объект с данными созданного пользователя Telegram
+        
+        Raises:
+            httpx.HTTPStatusError: При ошибке запроса к API
+        """
+        url = f"{self.base_url}/api/telegram_user"
+        async with httpx.AsyncClient(verify=self.verify, timeout=self.timeout) as client:
+            response = await client.post(
+                url,
+                headers=self._get_auth_header(),
+                json=telegram_user.model_dump(exclude_unset=True)
+            )
+            response.raise_for_status()
+            return TelegramUserResponse(**response.json())
+    
+    async def update_telegram_user(self, telegram_id: int, update_data: TelegramUserUpdate) -> TelegramUserResponse:
+        """
+        Обновление данных пользователя Telegram.
+
+        Args:
+            telegram_id: ID пользователя в Telegram
+            update_data: Объект с данными для обновления пользователя Telegram
+
+        Returns:
+            TelegramUserResponse: Объект с обновленными данными пользователя Telegram
+        
+        Raises:
+            httpx.HTTPStatusError: При ошибке запроса к API
+        """
+        url = f"{self.base_url}/api/telegram_user/{telegram_id}"
+        async with httpx.AsyncClient(verify=self.verify, timeout=self.timeout) as client:
+            response = await client.put(
+                url,
+                headers=self._get_auth_header(),
+                json=update_data.model_dump(exclude_unset=True, exclude_none=True)
+            )
+            response.raise_for_status()
+            return TelegramUserResponse(**response.json())
+    
+    async def delete_telegram_user(self, telegram_id: int) -> bool:
+        """
+        Удаление пользователя Telegram.
+
+        Args:
+            telegram_id: ID пользователя в Telegram
+
+        Returns:
+            bool: True, если пользователь успешно удален
+        
+        Raises:
+            httpx.HTTPStatusError: При ошибке запроса к API
+        """
+        url = f"{self.base_url}/api/telegram_user/{telegram_id}"
+        async with httpx.AsyncClient(verify=self.verify, timeout=self.timeout) as client:
+            response = await client.delete(
+                url,
+                headers=self._get_auth_header()
+            )
+            response.raise_for_status()
+            return True
+    
+    async def link_user_to_telegram(self, user_id: int, telegram_id: int, telegram_data: Optional[TelegramUserUpdate] = None) -> TelegramUserResponse:
+        """
+        Связывание пользователя Marzban с пользователем Telegram.
+
+        Args:
+            user_id: ID пользователя Marzban
+            telegram_id: ID пользователя в Telegram
+            telegram_data: Дополнительные данные для обновления пользователя Telegram (опционально)
+
+        Returns:
+            TelegramUserResponse: Объект с данными связанного пользователя Telegram
+        
+        Raises:
+            httpx.HTTPStatusError: При ошибке запроса к API
+        """
+        url = f"{self.base_url}/api/telegram_user/link/{user_id}/{telegram_id}"
+        
+        body = {}
+        if telegram_data:
+            body = telegram_data.model_dump(exclude_unset=True, exclude_none=True)
+            
+        async with httpx.AsyncClient(verify=self.verify, timeout=self.timeout) as client:
+            response = await client.post(
+                url,
+                headers=self._get_auth_header(),
+                json=body if body else None
+            )
+            response.raise_for_status()
+            return TelegramUserResponse(**response.json())
